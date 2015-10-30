@@ -1,0 +1,102 @@
+OASISFormat:  0.4
+OCamlVersion: >= 3.12.0
+Name:         savete
+Version:      0.0.1
+Synopsis:     Data dumper for backup system.
+Authors:      Sylvain Le Gall
+Copyrights:   (C) 2015 Sylvain Le Gall
+License:      GPL-3
+Plugins:      DevFiles (0.4), META (0.4), StdFiles (0.4)
+BuildTools:   ocamlbuild
+FilesAB:      src/bin/savete/conf.ml.ab
+Homepage:     https://forge.ocamlcore.org/projects/savete/
+Description:
+  Software and library to auto-detect what needs to be snapshoted. It includes
+  the following system to detect and dump data:
+  .
+   - MySQL databases dump
+   - PostgreSQL database dump
+   - Debian installed packages list
+
+#
+# Library and executable.
+#
+
+Library savete
+  Path:       src/lib/savete
+  Modules:    Savete
+  BuildDepends: fileutils (>= 0.4.2)
+
+Executable savete
+  Path:         src/bin/savete
+  MainIs:       main.ml
+  BuildDepends: savete, cmdliner
+
+#
+# Documentation
+#
+
+Document "api-savete"
+  Title:                API reference for Savete
+  Type:                 OCamlbuild (0.4)
+  InstallDir:           $htmldir/savete
+  BuildTools+:          ocamldoc
+  XOCamlbuildPath:      src/lib/savete
+  XOCamlbuildLibraries: savete
+
+Document "savete.1"
+  Title:   Manpage for savete.
+  Type:    Custom (0.4)
+  Format:  Other
+  XCustom: $savete --help=groff > doc/savete.1
+  XCustomClean: $rm doc/savete.1
+  InstallDir: $mandir/man1
+  DataFiles: doc/savete.1
+  BuildTools: savete
+
+Document "savete-dump.1"
+  Title:   Manpage for 'savete dump'.
+  Type:    Custom (0.4)
+  Format:  Other
+  XCustom: $savete dump --help=groff > doc/savete-dump.1
+  XCustomClean: $rm doc/savete-clean.1
+  InstallDir: $mandir/man1
+  DataFiles: doc/savete-dump.1
+  BuildTools: savete
+
+Document "savete-restore.1"
+  Title:   Manpage for 'savete restore'.
+  Type:    Custom (0.4)
+  Format:  Other
+  XCustom: $savete restore --help=groff > doc/savete-restore.1
+  XCustomClean: $rm doc/savete-restore.1
+  InstallDir: $mandir/man1
+  DataFiles: doc/savete-restore.1
+  BuildTools: savete
+
+Document "savete-help.1"
+  Title:   Manpage for 'savete help'.
+  Type:    Custom (0.4)
+  Format:  Other
+  XCustom: $savete help --help=groff > doc/savete-help.1
+  XCustomClean: $rm doc/savete-help.1
+  InstallDir: $mandir/man1
+  DataFiles: doc/savete-help.1
+  BuildTools: savete
+
+#
+# Tests
+#
+
+Executable test
+  Path:         test
+  Build$:       flag(tests)
+  MainIs:       test.ml
+  BuildDepends:
+    savete,
+    oUnit (>= 2.0),
+    fileutils (>= 0.4.2)
+
+Test main
+  Command:   $test -savete $savete
+  TestTools: test, dar, savete

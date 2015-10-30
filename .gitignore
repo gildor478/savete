@@ -18,3 +18,9 @@ _build/
 # oasis generated files
 setup.data
 setup.log
+
+/main.byte
+/test.byte
+/dist/
+/doc/*.1
+/src/bin/savete/Conf.ml
