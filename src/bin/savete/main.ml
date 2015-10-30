@@ -19,13 +19,12 @@
 
 open Cmdliner
 
-
 type copts =
   {
     logging_filter: [`Error|`Warning|`Info|`Debug] -> bool;
     cdry_run: bool;
-    ini: filename;
-    ini_d: filename;
+    ini: Savete.filename;
+    ini_d: Savete.dirname;
   }
 
 
@@ -51,37 +50,34 @@ let help copts man_format cmds topic =
         | `Error e -> `Error (false, e)
         | `Ok t when t = "topics" -> List.iter print_endline topics; `Ok ()
         | `Ok t when List.mem t cmds -> `Help (man_format, Some t)
-        | `Ok t ->
-            let page = [] in
-            `Ok (Cmdliner.Manpage.print man_format Format.std_formatter page)
+        | `Ok t -> `Error (true, Printf.sprintf "Unknown topic %S." topic)
     end
 
 
-let t ?(asopts=fun _ -> true) copts =
-  let t = load_configuration default ~dir:copts.ini_d copts.ini in
-  let if_opt e = function Some e -> e | None -> e in
+let t copts =
+(*   let t = Savete.load_configuration Savete.default ~dir:copts.ini_d copts.ini
+ *   in *)
     {
-      t with
-          dry_run = copts.cdry_run;
-          log = (fun lvl s ->
-                   if copts.logging_filter lvl then
-                     Printf.eprintf "%c: %s\n%!"
-                       (List.assoc lvl
-                          [`Debug, 'D';
-                           `Info, 'I';
-                           `Warning, 'W';
-                           `Error, 'E'])
-                       s);
+        Savete.dry_run = copts.cdry_run;
+        Savete.log = (fun lvl s ->
+                 if copts.logging_filter lvl then
+                   Printf.eprintf "%c: %s\n%!"
+                     (List.assoc lvl
+                        [`Debug, 'D';
+                         `Info, 'I';
+                         `Warning, 'W';
+                         `Error, 'E'])
+                     s);
     }
 
 
-let dump copts =
-  Savete.dump (t copts);
+let dump copts dn =
+  Savete.dump (t copts) dn;
   `Ok ()
 
 
-let restore copts =
-  Savete.restore (t copts);
+let restore copts dn =
+  Savete.restore (t copts) dn;
   `Ok ()
 
 
@@ -129,7 +125,7 @@ let copts_t =
     let doc = "Directory containing INI files to load for configuration." in
       Arg.(value & opt dir Conf.ini_d & info ["ini_d"] ~docs ~doc)
   in
-  let copts logging_filter dry_run dar now_rfc3339 ini ini_d =
+  let copts logging_filter dry_run ini ini_d =
     {
       logging_filter;
       cdry_run = dry_run;
@@ -187,7 +183,8 @@ let restore_cmd =
   let doc = "Restore a dataset from a backup." in
   let man =
     [`S "DESCRIPTION";
-     `P "Restore live data from a directory, previously created with $(b,dump)."]
+     `P "Restore live data from a directory, previously created with $(b,dump)."
+    ]
     @ help_secs
   in
   let src =

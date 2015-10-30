@@ -22,7 +22,7 @@ open FileUtil
 open Savete
 
 
-let savete_exec = Conf.make_exec "darckup"
+let savete_exec = Conf.make_exec "savete"
 
 
 let test_dump test_ctxt =

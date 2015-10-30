@@ -17,6 +17,7 @@
 (* along with this program.  If not, see <http://www.gnu.org/licenses/>. *)
 (*************************************************************************)
 
+type filename = string
 type dirname = string
 
 (** Configuration for Savete high level commands. *)
@@ -29,6 +30,12 @@ type t = {
     *)
   log: [`Debug | `Info | `Warning | `Error] -> string -> unit;
 }
+
+(** Default configuration. *)
+val default: t
+
+(** Load configuration from file. *)
+val load_configuration: t -> ?dir:dirname -> filename -> t
 
 (** Dump data to a directory. *)
 val dump: t -> dirname -> unit

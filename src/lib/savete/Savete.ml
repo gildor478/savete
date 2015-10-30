@@ -17,6 +17,7 @@
 (* along with this program.  If not, see <http://www.gnu.org/licenses/>. *)
 (*************************************************************************)
 
+type filename = string
 type dirname = string
 
 type t = {
@@ -24,8 +25,20 @@ type t = {
   log: [`Debug | `Info | `Warning | `Error] -> string -> unit;
 }
 
+
+let default = {
+  dry_run = false;
+  log = (fun _ _ -> ());
+}
+
+
+let load_configuration t ?dir fn =
+  t
+
+
 let dump t dn =
   ()
+
 
 let restore t dn =
   ()

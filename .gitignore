@@ -23,4 +23,4 @@ setup.log
 /test.byte
 /dist/
 /doc/*.1
-/src/bin/savete/Conf.ml
+/src/bin/savete/conf.ml
