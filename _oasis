@@ -23,9 +23,10 @@ Description:
 #
 
 Library savete
-  Path:       src/lib/savete
-  Modules:    Savete
-  BuildDepends: fileutils (>= 0.4.2)
+  Path:            src/lib/savete
+  InternalModules: Command
+  Modules:         Savete
+  BuildDepends:    fileutils (>= 0.4.2)
 
 Executable savete
   Path:         src/bin/savete
