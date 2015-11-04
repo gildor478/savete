@@ -99,6 +99,7 @@ struct
            Command.out = Command.Transfer.create (output_string fd)}
     in
       try
+        Unix.chmod tmpfn 0o600;
         logf t `Info "Run command '%s' and redirect output to %S."
           (Command.string_of_exec bin' drv.args) tmpfn;
         Command.exec cmd bin' drv.args;
@@ -106,6 +107,7 @@ struct
         if not t.dry_run then begin
           logf t `Info "Copy %S to %s." tmpfn fn;
           FileUtil.cp [tmpfn] fn;
+          Unix.chmod fn 0o600;
         end;
         clean ()
       with e ->
