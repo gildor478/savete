@@ -39,29 +39,54 @@ let load_configuration t ?dir fn =
 let logf t lvl fmt =
   Printf.ksprintf (fun s -> t.log lvl s) fmt
 
+module Driver =
+struct
+  type drv = {
+    name: string;
+    dir: dirname;
+    test: FileUtil.test_file;
+    bin: string;
+    args: Command.arg list;
+    user: Command.uid;
+    output_basename: filename;
+  }
 
-let dump t dn =
-  let cmd =
-    {
-      Command.default with
-          Command.
-          err =
-            {(Command.Transfer.create (logf t `Warning "%s"))
-               with
-                   Command.Transfer.full_line = true};
-          dry_run = t.dry_run;
-    }
-  in
-  let capture cmd bin args bn =
-    let fn = Filename.concat dn bn in
+  let has drv t =
+    let b =
+      logf t `Info "Testing if the system has data for driver %s" drv.name;
+      FileUtil.find drv.test drv.dir
+        (fun _ e ->
+           logf t `Info "File %S match driver %s data pattern." e drv.name;
+           true)
+        false
+    in
+      if not b then begin
+        logf t `Info "No data for driver %s, skipping it." drv.name
+      end;
+      b
+
+  let dump drv t dn =
+    let cmd =
+      {
+        Command.default with
+            Command.
+            err =
+              {(Command.Transfer.create (logf t `Warning "%s"))
+                 with
+                     Command.Transfer.full_line = true};
+            dry_run = t.dry_run;
+            user = drv.user;
+      }
+    in
+    let fn = Filename.concat dn drv.output_basename in
     let bin' =
       try
-        FileUtil.which bin
+        FileUtil.which drv.bin
       with Not_found ->
-        failwith (Printf.sprintf "Unable to find executable %S." bin)
+        failwith (Printf.sprintf "Unable to find executable %S." drv.bin)
     in
     let tmpfn, fd =
-      Filename.open_temp_file ~temp_dir:dn bn ".tmp"
+      Filename.open_temp_file ~temp_dir:dn drv.output_basename ".tmp"
     in
     let clean () =
       try
@@ -75,8 +100,8 @@ let dump t dn =
     in
       try
         logf t `Info "Run command '%s' and redirect output to %S."
-          (Command.string_of_exec bin args) tmpfn;
-        Command.exec cmd bin' args;
+          (Command.string_of_exec bin' drv.args) tmpfn;
+        Command.exec cmd bin' drv.args;
         close_out fd;
         if not t.dry_run then begin
           logf t `Info "Copy %S to %s." tmpfn fn;
@@ -86,37 +111,54 @@ let dump t dn =
       with e ->
         clean ();
         raise e
-  in
 
-  (* dpkg --get-selections *)
-  let () =
-    capture cmd
-      "dpkg"
-      Command.([A "--get-selections"])
-      "dpkg-get-selections.txt"
-  in
+  let run drv t dn =
+    if has drv t then begin
+      try
+        dump drv t dn
+      with Failure msg ->
+        logf t `Error "Cannot run driver %s: %s" drv.name msg
+    end
+end
 
-  (* mysqldump *)
-  let () =
-    capture cmd
-      "mysqldump"
-      Command.([Fn "--defaults-extra-file=/etc/mysql/debian.cnf";
-       A "--all-databases";
-       A "--add-drop-database";
-       A "--add-drop-table";
-       A "--events"])
-      "mysqldump-all-databases.sql"
-  in
 
-  (* pg_dumpall *)
-  let () =
-    capture {cmd with Command.user = `User "postgres"}
-      "pg_dumpall"
-      Command.([A "--clean"; A "--no-password"])
-      "pg_dumpall.sql"
-  in
+let drivers = Driver.([
+  {
+    name = "dpkg-get-selections";
+    dir = "/var/lib/dpkg";
+    test = FileUtil.(And(Is_file, Basename_is "status"));
+    user = `Same;
+    bin = "dpkg";
+    args =  Command.([A "--get-selections"]);
+    output_basename = "dpkg-get-selections.txt";
+  };
+  {
+    name = "mysqldump-all-databases";
+    dir = "/var/lib/mysql";
+    test = FileUtil.(And(Is_file, Has_extension "frm"));
+    user = `Same;
+    bin = "mysqldump";
+    args = Command.([Fn "--defaults-extra-file=/etc/mysql/debian.cnf";
+                     A "--all-databases";
+                     A "--add-drop-database";
+                     A "--add-drop-table";
+                     A "--events"]);
+    output_basename = "mysqldump-all-databases.sql";
+  };
+  {
+    name = "pg_dumpall";
+    dir = "/var/lib/postgresql";
+    test = FileUtil.(And (Basename_is "postmaster.opts", Is_file));
+    user = `User "postgres";
+    bin = "pg_dumpall";
+    args = Command.([A "--clean"; A "--no-password"]);
+    output_basename = "pg_dumpall.sql";
+  };
+])
 
-    ()
+
+let dump t dn =
+  List.iter (fun drv -> Driver.run drv t dn) drivers
 
 
 let restore t dn =

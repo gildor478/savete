@@ -190,12 +190,14 @@ struct
 end
 
 
+type uid = [ `User of string | `Uid of int | `Same ]
+
 type 'a t = {
   env: string array;
   err: Transfer.t;
   out: Transfer.t;
   exitf: string -> int -> 'a;
-  user: [ `User of string | `Uid of int | `Same];
+  user: uid;
   chdir: dirname option;
   dry_run: bool;
 }
