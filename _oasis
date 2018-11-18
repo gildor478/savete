@@ -29,9 +29,10 @@ Library savete
   BuildDepends:    fileutils (>= 0.4.2)
 
 Executable savete
-  Path:         src/bin/savete
-  MainIs:       main.ml
-  BuildDepends: savete, cmdliner
+  Path:           src/bin/savete
+  MainIs:         main.ml
+  CompiledObject: best
+  BuildDepends:   savete, cmdliner
 
 #
 # Documentation
