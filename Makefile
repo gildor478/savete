@@ -113,9 +113,8 @@ OASIS2DEBIAN_ARGS=--distribution wheezy \
 
 deploy:
 	admin-gallu-deploy --verbose \
-		--debian_pkg --debuild --distdebuild --debian_upload \
-		--oasis2debian_args "$(OASIS2DEBIAN_ARGS)" \
 		--forge_upload --forge_group savete
+	./tools/gildor478-deploy-tools/deploy-using-oasis
 	admin-gallu-oasis-increment --use_vcs \
 		--setup_run --setup_args '-setup-update dynamic'
 

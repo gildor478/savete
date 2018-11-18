@@ -1,0 +1,3 @@
+[submodule "tools/gildor478-deploy-tools"]
+	path = tools/gildor478-deploy-tools
+	url = https://github.com/gildor478/gildor478-deploy-tools.git
