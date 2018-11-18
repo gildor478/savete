@@ -22,14 +22,14 @@ struct
   type t = {
     f: string -> unit;
     full_line: bool;
-    buffer: string;
+    buffer: Bytes.t;
     remainder: Buffer.t;
   }
 
   let create ?(full_line=false) f =
     {
       f; full_line;
-      buffer = String.create 4096;
+      buffer = Bytes.create 4096;
       remainder = Buffer.create 13;
     }
 
@@ -37,7 +37,7 @@ struct
     let read =
       loop_non_intr
         (fun () ->
-           Unix.read fd t.buffer 0 (String.length t.buffer))
+           Unix.read fd t.buffer 0 (Bytes.length t.buffer))
     in
     if read <= 0 then begin
       if Buffer.length t.remainder > 0 then begin
@@ -48,32 +48,32 @@ struct
     end else begin
       let str =
         if Buffer.length t.remainder = 0 then begin
-          String.sub t.buffer 0 read
+          Bytes.sub t.buffer 0 read
         end else begin
-          Buffer.add_substring t.remainder t.buffer 0 read;
-          Buffer.contents t.remainder
+          Buffer.add_subbytes t.remainder t.buffer 0 read;
+          Buffer.to_bytes t.remainder
         end
       in
         Buffer.clear t.remainder;
         if t.full_line then begin
           let rec split_line from =
-            if from < String.length str then begin
+            if from < Bytes.length str then begin
               try
-                let i = String.index_from str from '\n' in
+                let i = Bytes.index_from str from '\n' in
                   (* Drop the last char. *)
                   if from = i then
                     t.f ""
                   else
-                    t.f (String.sub str from i);
+                    t.f (Bytes.to_string (Bytes.sub str from i));
                   split_line (i + 1)
               with Not_found ->
-                Buffer.add_substring t.remainder str
-                  from ((String.length str) - from)
+                Buffer.add_subbytes t.remainder str
+                  from ((Bytes.length str) - from)
             end
           in
             split_line 0
         end else begin
-          t.f str
+          t.f (Bytes.to_string str)
         end
     end
 end

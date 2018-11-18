@@ -60,7 +60,7 @@ Document "savete-dump.1"
   Type:    Custom (0.4)
   Format:  Other
   XCustom: $savete dump --help=groff > doc/savete-dump.1
-  XCustomClean: $rm doc/savete-clean.1
+  XCustomClean: $rm doc/savete-dump.1
   InstallDir: $mandir/man1
   DataFiles: doc/savete-dump.1
   BuildTools: savete
