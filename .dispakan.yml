@@ -1,0 +1,4 @@
+BinaryTarballs:
+  'savete':
+    MakeTargets:
+    - install-bin

@@ -108,14 +108,18 @@ headache:
 # Deploy target
 #  Deploy/release the software.
 
-OASIS2DEBIAN_ARGS=--distribution wheezy \
-		--executable-name savete
-
 deploy:
-	admin-gallu-deploy --verbose \
-		--forge_upload --forge_group savete
-	./tools/gildor478-deploy-tools/deploy-using-oasis
-	admin-gallu-oasis-increment --use_vcs \
-		--setup_run --setup_args '-setup-update dynamic'
+	dispakan --verbose $(DEPLOY_FLAGS)
 
-.PHONY: deploy
+install-bin:
+	ocaml  setup.ml -configure \
+		--prefix / \
+		--sysconfdir /etc \
+		--destdir "$(DESTDIR)"
+	ocaml setup.ml -build
+	mkdir -p "$(DESTDIR)/lib/ocaml"
+	env OCAMLFIND_DESTDIR="$(DESTDIR)/lib/ocaml" \
+		ocaml setup.ml -install
+
+
+.PHONY: deploy install-bin
