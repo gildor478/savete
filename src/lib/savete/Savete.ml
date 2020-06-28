@@ -143,8 +143,7 @@ let drivers = Driver.([
     args = Command.([Fn "--defaults-extra-file=/etc/mysql/debian.cnf";
                      A "--all-databases";
                      A "--add-drop-database";
-                     A "--add-drop-table";
-                     A "--events"]);
+                     A "--add-drop-table"]);
     output_basename = "mysqldump-all-databases.sql";
   };
   {
