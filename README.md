@@ -1,4 +1,4 @@
 # savete
 Data dumper for backup system.
 
-__This project is deprecated.___
+__This project is deprecated.__
